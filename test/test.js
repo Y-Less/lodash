@@ -81,7 +81,8 @@
   var add = function(x, y) { return x + y; },
       doubled = function(n) { return n * 2; },
       isEven = function(n) { return n % 2 == 0; },
-      square = function(n) { return n * n; };
+      square = function(n) { return n * n; },
+      squareEven = function(n) { if (isEven(n)) return n * n; };
 
   /** Stub functions. */
   var stubA = function() { return 'a'; },
@@ -13281,6 +13282,13 @@
       assert.deepEqual(_.map(objects, 'a'), ['x', 'y']);
     });
 
+    QUnit.test('should include non-existant `_.property` shorthands', function(assert) {
+      assert.expect(1);
+
+      var objects = [{ 'a': 'x' }, { 'b': 'y' }, { 'a': 'z' }];
+      assert.deepEqual(_.map(objects, 'a'), ['x', undefined, 'z']);
+    });
+
     QUnit.test('should iterate over own string keyed properties of objects', function(assert) {
       assert.expect(1);
 
@@ -13408,6 +13416,143 @@
       }
       else {
         skipAssert(assert, 5);
+      }
+    });
+  }());
+
+  /*--------------------------------------------------------------------------*/
+
+  QUnit.module('lodash.mapMaybe');
+
+  (function() {
+    var array = [1, 2];
+
+    QUnit.test('should behave as `_.map`, creating a new array without `undefined` returns', function(assert) {
+      assert.expect(2);
+
+      var object = { 'a': 1, 'b': 2 },
+          expected = ['1', '2'];
+
+      assert.deepEqual(_.mapMaybe(array, String), expected);
+      assert.deepEqual(_.mapMaybe(object, String), expected);
+    });
+
+    QUnit.test('should omit `undefined` returns', function(assert) {
+      assert.expect(2);
+
+      var object = { 'a': 1, 'b': 2 },
+          expected = [4];
+
+      assert.deepEqual(_.mapMaybe(array, squareEven), expected);
+      assert.deepEqual(_.mapMaybe(object, squareEven), expected);
+    });
+
+    QUnit.test('should omit more `undefined` returns', function(assert) {
+      assert.expect(2);
+
+      var arr2 = [1, 2, 4, 5, 7, 8],
+          obj2 = { 'a': 1, 'b': 2, 'c': 4, 'd': 5, 'e': 7, 'f': 8 },
+          func = function (value) { if (value > 4) return value + 4; },
+          expected = [9, 11, 12];
+
+      assert.deepEqual(_.mapMaybe(arr2, func), expected);
+      assert.deepEqual(_.mapMaybe(obj2, func), expected);
+    });
+
+    QUnit.test('should work with `_.property` shorthands', function(assert) {
+      assert.expect(1);
+
+      var objects = [{ 'a': 'x' }, { 'a': 'y' }];
+      assert.deepEqual(_.mapMaybe(objects, 'a'), ['x', 'y']);
+    });
+
+    QUnit.test('should exclude non-existant `_.property` shorthands', function(assert) {
+      assert.expect(1);
+
+      var objects = [{ 'a': 'x' }, { 'b': 'y' }, { 'a': 'z' }];
+      assert.deepEqual(_.mapMaybe(objects, 'a'), ['x', 'z']);
+    });
+
+    QUnit.test('should iterate over own string keyed properties of objects', function(assert) {
+      assert.expect(1);
+
+      function Foo() {
+        this.a = 1;
+      }
+      Foo.prototype.b = 2;
+
+      var actual = _.mapMaybe(new Foo, identity);
+      assert.deepEqual(actual, [1]);
+    });
+
+    QUnit.test('should use `_.identity` when `iteratee` is nullish', function(assert) {
+      assert.expect(2);
+
+      var object = { 'a': 1, 'b': 2 },
+          values = [, null, undefined],
+          expected = lodashStable.map(values, lodashStable.constant([1, 2]));
+
+      lodashStable.each([array, object], function(collection) {
+        var actual = lodashStable.map(values, function(value, index) {
+          return index ? _.mapMaybe(collection, value) : _.mapMaybe(collection);
+        });
+
+        assert.deepEqual(actual, expected);
+      });
+    });
+
+    QUnit.test('should accept a falsey `collection` argument', function(assert) {
+      assert.expect(1);
+
+      var expected = lodashStable.map(falsey, stubArray);
+
+      var actual = lodashStable.map(falsey, function(collection, index) {
+        try {
+          return index ? _.mapMaybe(collection) : _.mapMaybe();
+        } catch (e) {}
+      });
+
+      assert.deepEqual(actual, expected);
+    });
+
+    QUnit.test('should treat number values for `collection` as empty', function(assert) {
+      assert.expect(1);
+
+      assert.deepEqual(_.mapMaybe(1), []);
+    });
+
+    QUnit.test('should treat a nodelist as an array-like object', function(assert) {
+      assert.expect(1);
+
+      if (document) {
+        var actual = _.mapMaybe(document.getElementsByTagName('body'), function(element) {
+          return element.nodeName.toLowerCase();
+        });
+
+        assert.deepEqual(actual, ['body']);
+      }
+      else {
+        skipAssert(assert);
+      }
+    });
+
+    QUnit.test('should work with objects with non-number length properties', function(assert) {
+      assert.expect(1);
+
+      var value = { 'value': 'x' },
+          object = { 'length': { 'value': 'x' } };
+
+      assert.deepEqual(_.mapMaybe(object, identity), [value]);
+    });
+
+    QUnit.test('should return a wrapped value when chaining', function(assert) {
+      assert.expect(1);
+
+      if (!isNpm) {
+        assert.ok(_(array).mapMaybe(noop) instanceof _);
+      }
+      else {
+        skipAssert(assert);
       }
     });
   }());
@@ -26320,6 +26465,7 @@
       'invokeMap',
       'keys',
       'map',
+      'mapMaybe',
       'orderBy',
       'pull',
       'pullAll',
@@ -26347,7 +26493,7 @@
     var acceptFalsey = lodashStable.difference(allMethods, rejectFalsey);
 
     QUnit.test('should accept falsey arguments', function(assert) {
-      assert.expect(316);
+      assert.expect(318);
 
       var arrays = lodashStable.map(falsey, stubArray);
 
@@ -26385,7 +26531,7 @@
     });
 
     QUnit.test('should return an array', function(assert) {
-      assert.expect(70);
+      assert.expect(72);
 
       var array = [1, 2, 3];
 

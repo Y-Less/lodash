@@ -614,6 +614,30 @@
   }
 
   /**
+   * A specialized version of `_.mapMaybe` for arrays without support for iteratee
+   * shorthands.
+   *
+   * @private
+   * @param {Array} [array] The array to iterate over.
+   * @param {Function} iteratee The function invoked per iteration.
+   * @returns {Array} Returns the new mapped array.
+   */
+  function arrayMapMaybe(array, iteratee) {
+    var index = -1,
+        length = array ? array.length : 0,
+        result = [],
+        singleResult;
+
+    while (++index < length) {
+      singleResult = iteratee(array[index], index, array);
+      if (singleResult !== undefined) {
+        result.push(singleResult);
+      }
+    }
+    return result;
+  }
+
+  /**
    * Appends the elements of `values` to `array`.
    *
    * @private
@@ -3280,6 +3304,27 @@
 
       baseEach(collection, function(value, key, collection) {
         result[++index] = iteratee(value, key, collection);
+      });
+      return result;
+    }
+
+    /**
+     * The base implementation of `_.mapMaybe` without support for iteratee shorthands.
+     *
+     * @private
+     * @param {Array|Object} collection The collection to iterate over.
+     * @param {Function} iteratee The function invoked per iteration.
+     * @returns {Array} Returns the new mapped array.
+     */
+    function baseMapMaybe(collection, iteratee) {
+      var result = [],
+          singleResult;
+
+      baseEach(collection, function(value, key, collection) {
+        singleResult = iteratee(value, key, collection);
+        if (singleResult !== undefined) {
+          result.push(singleResult);
+        }
       });
       return result;
     }
@@ -9043,6 +9088,57 @@
      */
     function map(collection, iteratee) {
       var func = isArray(collection) ? arrayMap : baseMap;
+      return func(collection, getIteratee(iteratee, 3));
+    }
+
+    /**
+     * Creates an array of values by running each element in `collection` thru
+     * `iteratee`. The iteratee is invoked with three arguments:
+     * (value, index|key, collection). If `iteratee` returns nothing (i.e.
+     * undefined), no value is added to the output. This is different to `_.map`
+     * where returning nothing will add undefined to the return array.
+     *
+     * Many lodash methods are guarded to work as iteratees for methods like
+     * `_.every`, `_.filter`, `_.map`, `_.mapValues`, `_.reject`, and `_.some`.
+     *
+     * The guarded methods are:
+     * `ary`, `chunk`, `curry`, `curryRight`, `drop`, `dropRight`, `every`,
+     * `fill`, `invert`, `parseInt`, `random`, `range`, `rangeRight`, `repeat`,
+     * `sampleSize`, `slice`, `some`, `sortBy`, `split`, `take`, `takeRight`,
+     * `template`, `trim`, `trimEnd`, `trimStart`, and `words`
+     *
+     * @static
+     * @memberOf _
+     * @since 4.14.0
+     * @category Collection
+     * @param {Array|Object} collection The collection to iterate over.
+     * @param {Function} [iteratee=_.identity] The function invoked per iteration.
+     * @returns {Array} Returns the new mapped array, with undefined values skipped.
+     * @example
+     *
+     * function squareEvens(n) {
+     *   if (!(n % 2))
+     *     return n * n;
+     * }
+     *
+     * _.mapMaybe([1, 2, 3, 4, 5], squareEvens);
+     * // => [4, 16]
+     *
+     * _.mapMaybe({ 'a': 4, 'b': 7, 'c': 10 }, square);
+     * // => [16, 100] (iteration order is not guaranteed)
+     *
+     * var users = [
+     *   { 'user': 'barney' },
+     *   { 'name': 'wilma' },
+     *   { 'user': 'fred' }
+     * ];
+     *
+     * // The `_.property` iteratee shorthand.
+     * _.mapMaybe(users, 'user');
+     * // => ['barney', 'fred']
+     */
+    function mapMaybe(collection, iteratee) {
+      var func = isArray(collection) ? arrayMapMaybe : baseMapMaybe;
       return func(collection, getIteratee(iteratee, 3));
     }
 
@@ -16070,6 +16166,7 @@
     lodash.keys = keys;
     lodash.keysIn = keysIn;
     lodash.map = map;
+    lodash.mapMaybe = mapMaybe;
     lodash.mapKeys = mapKeys;
     lodash.mapValues = mapValues;
     lodash.matches = matches;
