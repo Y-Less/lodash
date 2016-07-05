@@ -3,7 +3,7 @@
 [Site](https://lodash.com/) |
 [Docs](https://lodash.com/docs) |
 [FP Guide](https://github.com/lodash/lodash/wiki/FP-Guide) |
-[Contributing](https://github.com/lodash/lodash/blob/4.14.0/.github/CONTRIBUTING.md) |
+[Contributing](https://github.com/lodash/lodash/blob/master/.github/CONTRIBUTING.md) |
 [Wiki](https://github.com/lodash/lodash/wiki "Changelog, Roadmap, etc.") |
 [Code of Conduct](https://jquery.org/conduct/) |
 [Twitter](https://twitter.com/bestiejs) |
@@ -43,4 +43,4 @@ Lodash is available in a [variety of builds](https://lodash.com/custom-builds) &
  * [lodash](https://www.npmjs.com/package/lodash) & [per method packages](https://www.npmjs.com/browse/keyword/lodash-modularized)
  * [lodash-amd](https://www.npmjs.com/package/lodash-amd)
  * [lodash-es](https://www.npmjs.com/package/lodash-es) & [babel-plugin-lodash](https://www.npmjs.com/package/babel-plugin-lodash)
- * [lodash/fp](https://github.com/lodash/lodash/tree/4.14.0-npm/fp)
+ * [lodash/fp](https://github.com/lodash/lodash/tree/npm/fp)
