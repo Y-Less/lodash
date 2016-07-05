@@ -614,6 +614,38 @@
   }
 
   /**
+   * A specialized version of `_.intersperse` for arrays without support for
+   * iteratee shorthands.
+   *
+   * @private
+   * @param {Array} [array] The array to iterate over.
+   * @param {*} insertion The value to insert between all elements.
+   * @returns {Array} Returns the new mapped array.
+   */
+  function arrayIntersperse(array, insertion) {
+    var inIdx = 0,
+        outIdx = 0,
+        length = array ? array.length : 0,
+        result;
+
+    // Normally the loop would handle the empty input case, but because "2 * 0 - 1"
+    // is "-1", which is not a valid array size, we need to check for the empty
+    // case anyway, so may as well end early.
+    if (length) {
+      result = Array(length * 2 - 1);
+      result[0] = array[0];
+    }
+    else {
+      return [];
+    }
+    while (++inIdx < length) {
+      result[++outIdx] = insertion;
+      result[++outIdx] = array[inIdx];
+    }
+    return result;
+  }
+
+  /**
    * Appends the elements of `values` to `array`.
    *
    * @private
@@ -3285,6 +3317,41 @@
     }
 
     /**
+     * The base implementation of `_.intersperse` without support for iteratee shorthands.
+     *
+     * @private
+     * @param {Array|Object} collection The collection to iterate over.
+     * @param {*} insertion The value to insert between all elements.
+     * @returns {Array} Returns the new mapped array.
+     */
+    function baseIntersperse(collection, insertion) {
+      var index = 0,
+          result;
+      
+      if (isArrayLike(collection)) {
+        // Like "arrayIntersperse", "2 * 0 - 1" is invalid, so an explicit
+        // check is required.  The short-cut return is just because we may
+        // as well if the check is already required.
+        if (collection.length) {
+          result = Array(collection.length * 2 - 1);
+        }
+        else {
+          return [];
+        }
+      }
+      else {
+        result = [];
+      }
+      baseEach(collection, function(value, key, collection) {
+        if (index) {
+          result[index++] = insertion;
+        }
+        result[index++] = value;
+      });
+      return result;
+    }
+
+    /**
      * The base implementation of `_.matches` which doesn't clone `source`.
      *
      * @private
@@ -5230,7 +5297,7 @@
       }
       // Assume cyclic values are equal.
       var stacked = stack.get(array);
-      if (stacked) {
+      if (stacked && stack.get(other)) {
         return stacked == other;
       }
       var index = -1,
@@ -5238,6 +5305,7 @@
           seen = (bitmask & UNORDERED_COMPARE_FLAG) ? new SetCache : undefined;
 
       stack.set(array, other);
+      stack.set(other, array);
 
       // Ignore non-index properties.
       while (++index < arrLength) {
@@ -5395,11 +5463,12 @@
       }
       // Assume cyclic values are equal.
       var stacked = stack.get(object);
-      if (stacked) {
+      if (stacked && stack.get(other)) {
         return stacked == other;
       }
       var result = true;
       stack.set(object, other);
+      stack.set(other, object);
 
       var skipCtor = isPartial;
       while (++index < objLength) {
@@ -6392,6 +6461,8 @@
      * for equality comparisons. The order of result values is determined by the
      * order they occur in the first array.
      *
+     * **Note:** Unlike `_.pullAll`, this method returns a new array.
+     *
      * @static
      * @memberOf _
      * @since 0.1.0
@@ -6416,6 +6487,8 @@
      * is invoked for each element of `array` and `values` to generate the criterion
      * by which they're compared. Result values are chosen from the first array.
      * The iteratee is invoked with one argument: (value).
+     *
+     * **Note:** Unlike `_.pullAllBy`, this method returns a new array.
      *
      * @static
      * @memberOf _
@@ -6449,6 +6522,8 @@
      * which is invoked to compare elements of `array` to `values`. Result values
      * are chosen from the first array. The comparator is invoked with two arguments:
      * (arrVal, othVal).
+     *
+     * **Note:** Unlike `_.pullAllWith`, this method returns a new array.
      *
      * @static
      * @memberOf _
@@ -7996,6 +8071,8 @@
      * Creates an array excluding all given values using
      * [`SameValueZero`](http://ecma-international.org/ecma-262/6.0/#sec-samevaluezero)
      * for equality comparisons.
+	 *
+     * **Note:** Unlike `_.pull`, this method returns a new array.
      *
      * @static
      * @memberOf _
@@ -8608,6 +8685,8 @@
      * `predicate` returns truthy for. The predicate is invoked with three
      * arguments: (value, index|key, collection).
      *
+     * **Note:** Unlike `_.remove`, this method returns a new collection.
+     *
      * @static
      * @memberOf _
      * @since 0.1.0
@@ -9032,6 +9111,33 @@
     function map(collection, iteratee) {
       var func = isArray(collection) ? arrayMap : baseMap;
       return func(collection, getIteratee(iteratee, 3));
+    }
+
+    /**
+     * This method takes a collection and a value, and returns a new array with
+     * that value copied between every original index.  This is conceptually
+     * similar to `_.join`; however, that returns a string of all the values
+     * concatenated together, this returns an array with each element and separator
+     * still separate.
+     *
+     * @static
+     * @memberOf _
+     * @since 4.14.0
+     * @category Collection
+     * @param {Array|Object} collection The collection to intersperse within.
+     * @param {*} insertion What to put between all the existing elements.
+     * @returns {Array} Returns a new interspersed array.
+     * @example
+     *
+     * var names = [ 'fred', 'barney', 'betty', 'wilma' ];
+     *
+     * // Intersperse 'and' between each name.
+     * _.intersperse(users, 'and');
+     * // => [ 'fred', 'and', 'barney', 'and', 'betty', 'and', 'wilma' ]
+     */
+    function intersperse(collection, insertion) {
+      var func = isArray(collection) ? arrayIntersperse : baseIntersperse;
+      return func(collection, insertion);
     }
 
     /**
@@ -12214,6 +12320,8 @@
 
     /**
      * Creates an array of values corresponding to `paths` of `object`.
+     *
+     * **Note:** Unlike `_.pullAt`, this method returns a new object.
      *
      * @static
      * @memberOf _
@@ -16198,6 +16306,7 @@
     lodash.includes = includes;
     lodash.indexOf = indexOf;
     lodash.inRange = inRange;
+    lodash.intersperse = intersperse;
     lodash.invoke = invoke;
     lodash.isArguments = isArguments;
     lodash.isArray = isArray;

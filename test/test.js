@@ -8463,6 +8463,45 @@
 
   /*--------------------------------------------------------------------------*/
 
+  QUnit.module('lodash.intersperse');
+
+  (function() {
+    QUnit.test('should insert values', function(assert) {
+      assert.expect(2);
+    
+      var array = [1, 2, 3, 4, 5, 6],
+          object = { 'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5, 'f': 6 },
+          expect = [1, 9, 2, 9, 3, 9, 4, 9, 5, 9, 6]
+    
+      assert.deepEqual(_.intersperse(array, 9), expect);
+      assert.deepEqual(_.intersperse(object, 9), expect);
+    });
+
+    QUnit.test('should return single value arrays', function(assert) {
+      assert.expect(2);
+
+      var array = [1],
+          object = { 'a': 1 },
+          expect = [1]
+
+      assert.deepEqual(_.intersperse(array, 9), expect);
+      assert.deepEqual(_.intersperse(object, 9), expect);
+    });
+
+    QUnit.test('should return empty arrays', function(assert) {
+      assert.expect(2);
+
+      var array = [],
+          object = {},
+          expect = []
+
+      assert.deepEqual(_.intersperse(array, 9), expect);
+      assert.deepEqual(_.intersperse(object, 9), expect);
+    });
+  }());
+
+  /*--------------------------------------------------------------------------*/
+
   QUnit.module('lodash.invert');
 
   (function() {
@@ -26317,6 +26356,7 @@
       'functions',
       'initial',
       'intersection',
+      'intersperse',
       'invokeMap',
       'keys',
       'map',
@@ -26347,7 +26387,7 @@
     var acceptFalsey = lodashStable.difference(allMethods, rejectFalsey);
 
     QUnit.test('should accept falsey arguments', function(assert) {
-      assert.expect(316);
+      assert.expect(318);
 
       var arrays = lodashStable.map(falsey, stubArray);
 
@@ -26385,7 +26425,7 @@
     });
 
     QUnit.test('should return an array', function(assert) {
-      assert.expect(70);
+      assert.expect(72);
 
       var array = [1, 2, 3];
 
