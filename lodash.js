@@ -3327,7 +3327,7 @@
     function baseIntersperse(collection, insertion) {
       var index = 0,
           result;
-      
+
       if (isArrayLike(collection)) {
         // Like "arrayIntersperse", "2 * 0 - 1" is invalid, so an explicit
         // check is required.  The short-cut return is just because we may
